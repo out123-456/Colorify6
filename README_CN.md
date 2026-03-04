@@ -4,7 +4,7 @@
 
 ## 支持的游戏版本
 
-几乎所有现代版本的 MC 基岩版。
+几乎所有现代版本的 MCBE（基岩版）。
 
 ## 支持平台
 
@@ -20,8 +20,8 @@
    </tr>
     <tr>
         <td rowspan="2">Android</td>    
-  		 <td>鸿蒙 (HarmonyOS)</td> 
-  		 <td>&#10005</td> 
+       <td>鸿蒙 (HarmonyOS)</td> 
+       <td>&#10005</td> 
     </tr>
     <tr>
         <td>其他版本</td> 
@@ -59,8 +59,48 @@
 
 1. 确保你已安装 Dart SDK 和 Flutter SDK。
 
-2. 将项目克隆到你的电脑：
+2. 将项目克隆到你的本地电脑：
 
 ```bash
-git clone [https://github.com/ComeixAlpha/Colorify6.git](https://github.com/ComeixAlpha/Colorify6.git)
+git clone https://github.com/ComeixAlpha/Colorify6.git
 ```
+
+3. 获取项目依赖：
+
+```bash
+flutter pub get
+```
+
+4. 根据你的需求，带上平台参数进行构建：
+
+- Android
+
+```bash
+flutter build apk --split-per-abi
+```
+
+- Windows
+
+```bash
+flutter build windows
+```
+
+## 功能特性
+
+- **生成高度可定制的粒子画**
+  - 通过资源包自动生成所需的全部粒子。
+  - 支持带有动态色彩控制的浮尘（Dust）粒子。
+- **生成高度可定制的方块画**
+  - 内置插值算法，直接在 Colorify 中调整图像尺寸。
+  - 内置 Floyd-Steinberg 抖动算法，提升色彩过渡效果。
+  - 支持 RGB 及 RGB+ 颜色距离算法。
+  - 兼容所有游戏版本。
+- **自动创建 .mcpack 与 .mcaddon 文件**
+  - 支持自定义包信息。
+  - 自动生成精美的哈希风格包图标。
+  - 包含函数 (Functions)。
+  - 包含脚本 (Scripts)。
+  - 包含结构 (Structures)。
+  - 包含粒子 JSON。
+- **WebSocket 支持**
+  - 所有生成内容均支持通过 WebSocket 远程发送。
