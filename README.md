@@ -1,3 +1,7 @@
+<p align="right">
+  <b>语言：<a href="README_ZH.md">简体中文</a></b>
+</p>
+
 ![](assets/c6mask2.png)
 
 Particle/Block Painting Generator for Minecraft BE made with Flutter.
