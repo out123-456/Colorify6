@@ -1,5 +1,5 @@
 <p align="right">
-  <b>语言：<a href="README_ZH.md">简体中文</a></b>
+  <b>语言：<a href="README_CN.md">简体中文</a></b>
 </p>
 
 ![](assets/c6mask2.png)
