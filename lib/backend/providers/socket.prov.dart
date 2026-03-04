@@ -155,10 +155,10 @@ class Socketprov with ChangeNotifier {
             _virtualPlayerPos = [curX, _executeLoc![1], curZ];
             await WebSocket().broadcastCommand('tp @s $curX ${_executeLoc![1]} $curZ');
           } else {
-            bool shouldTp = (curX - _virtualPlayerPos![0]).abs() > 16 || (curZ - _virtualPlayerPos![2]).abs() > 16;
+            bool shouldTp = (curX - _virtualPlayerPos![0]).abs() > 64 || (curZ - _virtualPlayerPos![2]).abs() > 64;
             if (shouldTp) {
-              int nextX = _virtualPlayerPos![0] + (curX > _virtualPlayerPos![0] ? 32 : (curX < _virtualPlayerPos![0] ? -32 : 0));
-              int nextZ = _virtualPlayerPos![2] + (curZ > _virtualPlayerPos![2] ? 32 : (curZ < _virtualPlayerPos![2] ? -32 : 0));
+              int nextX = _virtualPlayerPos![0] + (curX > _virtualPlayerPos![0] ? 128 : (curX < _virtualPlayerPos![0] ? -128 : 0));
+              int nextZ = _virtualPlayerPos![2] + (curZ > _virtualPlayerPos![2] ? 128 : (curZ < _virtualPlayerPos![2] ? -128 : 0));
               await WebSocket().broadcastCommand('tp @s $nextX ${_executeLoc![1]} $nextZ');
               _virtualPlayerPos = [nextX, _executeLoc![1], nextZ];
             }
@@ -181,7 +181,7 @@ class Socketprov with ChangeNotifier {
 
       await WebSocket().broadcastCommand(command);
 
-      if (i % 16 == 0 || i == commands.length - 1) {
+      if (i % 128 == 0 || i == commands.length - 1) {
         if (_executeLoc != null) {
           await WebSocket().broadcastCommand(
             titleBuilder(_executeLoc!, _virtualPlayerPos, i, commands.length, speed),
