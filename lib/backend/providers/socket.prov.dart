@@ -32,6 +32,7 @@ class Socketprov with ChangeNotifier {
   List<String> get logs => _logs;
 
   bool _onTask = false;
+  List<int>? _virtualPlayerPos; // [ADD] 逻辑玩家位置追踪
   List<int>? _executeLoc;
   int _commandSent = 0;
   int _commandUnsend = 0;
@@ -133,11 +134,38 @@ class Socketprov with ChangeNotifier {
   }
 
   Future<void> processTask(List<String> commands) async {
+    final reg = RegExp(r'~(-?\d+)'); // [ADD] 坐标解析正则
+
     for (int i = 0; i < commands.length; i++) {
       if (!_onTask) {
         _cachedCommands = commands;
         return;
       }
+
+      // [ADD] 自动化跳跃 TP 加载逻辑开始
+      if (_executeLoc != null) {
+        final matches = reg.allMatches(commands[i]).toList();
+        if (matches.length >= 3) {
+          int relX = int.parse(matches[0].group(1)!);
+          int relZ = int.parse(matches[2].group(1)!);
+          int curX = _executeLoc![0] + relX;
+          int curZ = _executeLoc![2] + relZ;
+
+          if (_virtualPlayerPos == null) {
+            _virtualPlayerPos = [curX, _executeLoc![1], curZ];
+            await WebSocket().broadcastCommand('tp @s $curX ${_executeLoc![1]} $curZ');
+          } else {
+            bool shouldTp = (curX - _virtualPlayerPos![0]).abs() > 16 || (curZ - _virtualPlayerPos![2]).abs() > 16;
+            if (shouldTp) {
+              int nextX = _virtualPlayerPos![0] + (curX > _virtualPlayerPos![0] ? 32 : (curX < _virtualPlayerPos![0] ? -32 : 0));
+              int nextZ = _virtualPlayerPos![2] + (curZ > _virtualPlayerPos![2] ? 32 : (curZ < _virtualPlayerPos![2] ? -32 : 0));
+              await WebSocket().broadcastCommand('tp @s $nextX ${_executeLoc![1]} $nextZ');
+              _virtualPlayerPos = [nextX, _executeLoc![1], nextZ];
+            }
+          }
+        }
+      }
+      // [ADD] 自动化跳跃 TP 加载逻辑结束
 
       String command;
       if (_executeLoc != null) {
@@ -153,15 +181,18 @@ class Socketprov with ChangeNotifier {
 
       await WebSocket().broadcastCommand(command);
 
-      if (_executeLoc != null) {
-        await WebSocket().broadcastCommand(
-          titleBuilder(_executeLoc!, i, commands.length, speed),
-        );
-      } else {
-        await WebSocket().broadcastCommand(
-          'title @s actionbar §bColorify§f: §cPlease dont move§f. ${i + 1} / ${commands.length}',
-        );
+      if (i % 16 == 0 || i == commands.length - 1) {
+        if (_executeLoc != null) {
+          await WebSocket().broadcastCommand(
+            titleBuilder(_executeLoc!, _virtualPlayerPos, i, commands.length, speed),
+          );
+        } else {
+          await WebSocket().broadcastCommand(
+            'title @s actionbar §bColorify§f: §cPlease dont move!!!§f ${i + 1} / ${commands.length}',
+          );
+        }
       }
+
 
       _commandSent++;
       _commandUnsend--;
@@ -171,6 +202,7 @@ class Socketprov with ChangeNotifier {
     }
     _onTask = false;
   }
+
 
   void stopTask() {
     _onTask = false;
@@ -196,11 +228,11 @@ class Socketprov with ChangeNotifier {
   }
 }
 
-String titleBuilder(List<int> exeLoc, int executed, int len, int speed) {
+String titleBuilder(List<int> exeLoc, List<int>? virPos, int executed, int len, int speed) {
   const String line1 = '§bColorify§f - v6.1.6 - Comeix Alpha';
-  final String line2 =
-      'Executing at: [§6${exeLoc[0]}§f, §6${exeLoc[1]}§f, §6${exeLoc[2]}§f]';
-  final String line3 =
-      'Executed §6$executed§f / §6$len§f Last §6${((len - executed) / speed).toStringAsFixed(2)}s§f';
-  return 'title @s actionbar ${[line1, line2, line3].join('\n')}';
+  final String line2 = 'Executing at: [§6${exeLoc[0]}§f, §6${exeLoc[1]}§f, §6${exeLoc[2]}§f]';
+  final String line3 = "Player: [${virPos == null ? '§aWaiting§f' : '§a${virPos[0]}§f, §a${virPos[1]}§f, §a${virPos[2]}§f'}], §cPlease dont move!!!§f";
+  final String line4 = 'Executed §6$executed§f / §6$len§f';
+  final String line5 = 'Speed: §6${speed}§fBPS, Last §6${speed > 0 ? ((len - executed) / speed).toStringAsFixed(2) : '0'}s§f';
+  return 'title @s actionbar ${[line1, line2, line3, line4, line5].join('\n')}';
 }
