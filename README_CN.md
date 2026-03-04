@@ -1,3 +1,7 @@
+<p align="right">
+  <b>语言：<a href="README.md">English</a></b>
+</p>
+
 ![](assets/c6mask2.png)
 
 基于 Flutter 开发的 Minecraft BE 粒子/方块画生成器。
