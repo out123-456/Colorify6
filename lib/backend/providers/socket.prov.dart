@@ -11,7 +11,7 @@ enum WebSocketExecuteSyntaxVersion { executeOld, executeNew }
 
 class Socketprov with ChangeNotifier {
   WebSocketExecuteSyntaxVersion _socketExecuteSyntaxVersion =
-      WebSocketExecuteSyntaxVersion.executeOld;
+      WebSocketExecuteSyntaxVersion.executeNew;
   WebSocketState _socketState = WebSocketState.unactivated;
   int _socketDelay = 10;
 
