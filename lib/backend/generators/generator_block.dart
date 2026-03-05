@@ -459,7 +459,7 @@ List<String> _buildCommands(BlockMatrix blmx, GenBlockArguments args) {
 	final List<String> commands = [];
 	final int width = args.size[0]!;
 	final int height = args.size[1]!;
-	final List<int> bo = args.basicOffset ?? [0, 0, 0];
+	final List<int> bo = args.basicOffset?.cast<int>() ?? [0, 0, 0];
 
 	final Map<String, Block> blockMap = {
 		for (var b in blmx.blocks) "${b.x},${b.z}": b
