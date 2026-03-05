@@ -128,7 +128,7 @@ Future<void> _ensureGenerate(
   );
 
   /// 扁平化管理
-  args.version ??= '1.20.80';
+  args.version ??= '1.21.131';
 
   /// 采样
   _updateProgress(sendPort, '采样中', 2);
@@ -187,9 +187,9 @@ Future<void> _ensureGenerate(
     }
   } else {
     /// 设置 WebSocket 间隔
-    args.wsDelay ??= '10';
+    args.wsDelay ??= '20';
     int? delay = args.wsDelay!.toInt();
-    delay ??= 10;
+    delay ??= 20;
     sendPort.send(IsolateDataPack(type: IsolateDataPackType.socketDelay, data: delay));
 
     /// 用 WebSocket 输出
@@ -456,27 +456,53 @@ Future<void> _writeStructure(
 }
 
 List<String> _buildCommands(BlockMatrix blmx, GenBlockArguments args) {
-  final List<String> commands = [];
-  final List<int> bo = [
-    args.basicOffset![0] ?? 0,
-    args.basicOffset![1] ?? 0,
-    args.basicOffset![2] ?? 0,
-  ];
-  final List<int> bos = xyswitcher(args.plane, bo);
-  blmx.blocks.enumerate((i, v) {
-    final List<int> xyz = xyswitcher(args.plane, [v.x, v.y, v.z]);
-    if (args.stairType) {
-      commands.add(
-        'setblock ~${v.x + bos[0]} ~${v.y + bos[1]} ~${v.z + bos[2]} ${v.block.id} ${v.block.state}',
-      );
-    } else {
-      commands.add(
-        'setblock ~${xyz[0] + bos[0]} ~${xyz[1] + bos[1]} ~${xyz[2] + bos[2]} ${v.block.id} ${v.block.state}',
-      );
-    }
-  });
+	final List<String> commands = [];
+	final int width = args.size[0]!;
+	final int height = args.size[1]!;
+	final List<int> bo = args.basicOffset ?? [0, 0, 0];
 
-  return commands;
+	final Map<String, Block> blockMap = {
+		for (var b in blmx.blocks) "${b.x},${b.z}": b
+	};
+
+	const int chunkSize = 32;
+	
+	int lastTpX = -999999;
+	int lastTpZ = -999999;
+
+	for (int cz = 0; cz < (height / chunkSize).ceil(); cz++) {
+		for (int cx = 0; cx < (width / chunkSize).ceil(); cx++) {
+			
+			int startX = cx * chunkSize;
+			int startZ = cz * chunkSize;
+
+			for (int z = startZ; z < (startZ + chunkSize).clamp(0, height); z++) {
+				for (int x = startX; x < (startX + chunkSize).clamp(0, width); x++) {
+					final v = blockMap["$x,$z"];
+					if (v == null) continue;
+
+					final int rx = x - width;
+					final int rz = z - height;
+
+					final pos = xyswitcher(args.plane, [rx, v.y, rz]);
+					final offset = xyswitcher(args.plane, bo);
+
+					int currentManhattan = (pos[0] - lastTpX).abs() + (pos[2] - lastTpZ).abs();
+
+					if (currentManhattan >= 64) {
+						commands.add('tp @p ~${pos[0] + offset[0]} ~${bo[1]} ~${pos[2] + offset[2]}');
+						lastTpX = pos[0];
+						lastTpZ = pos[2];
+					}
+
+					commands.add(
+						'setblock ~${pos[0] + offset[0]} ~${pos[1] + offset[1]} ~${pos[2] + offset[2]} ${v.block.id} ${v.block.state}',
+					);
+				}
+			}
+		}
+	}
+	return commands;
 }
 
 Future<void> _writeFunctionsAndScripts(
